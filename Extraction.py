@@ -65,6 +65,9 @@ def myjob():
                             "original_title": "",
                             "original_company": ""
                         }
+                        os.mkdir(employerId)
+                        os.chdir(employerId)
+                        parent_working_directory = employerId
                         if URL.endswith(".zip"):
                             os.system(f"wget -c --read-timeout=5 --tries=0 {URL}")
 
@@ -80,7 +83,7 @@ def myjob():
                                 print('Done!')
 
                             filename = "jobiak_feed.xml"
-                            finalOp = xmlExtractor(folder_name, filename, feed_extraction_collection_conn, client_source_master_collection_conn, employerId,
+                            finalOp = xmlExtractor(parent_working_directory, folder_name, filename, feed_extraction_collection_conn, client_source_master_collection_conn, employerId,
                                                    client_conf_data["feed"], additional_fields_data,
                                                    client_companies_collection_conn, getProcessID)
                             print(finalOp)
@@ -93,7 +96,7 @@ def myjob():
                                 for chunk in r.iter_content(chunk_size=1200000):
                                     if chunk:  # filter out keep-alive new chunks
                                         f.write(chunk)
-                            finalOp = xmlExtractor(None, filename, feed_extraction_collection_conn, client_source_master_collection_conn, employerId,
+                            finalOp = xmlExtractor(parent_working_directory, None, filename, feed_extraction_collection_conn, client_source_master_collection_conn, employerId,
                                                        client_conf_data["feed"], additional_fields_data,
                                                        client_companies_collection_conn, getProcessID)
                             print(finalOp)
@@ -108,7 +111,7 @@ def myjob():
                             print("Completed Gunzipping data now")
 
                             filename = folder_name.split(".gz")[0]
-                            finalOp = xmlExtractor(folder_name, filename, feed_extraction_collection_conn, client_source_master_collection_conn, employerId,
+                            finalOp = xmlExtractor(parent_working_directory, folder_name, filename, feed_extraction_collection_conn, client_source_master_collection_conn, employerId,
                                                    client_conf_data["feed"], additional_fields_data,
                                                    client_companies_collection_conn, getProcessID)
                             print(finalOp)
@@ -120,7 +123,7 @@ def myjob():
                             print(partnervalue, countryvalue)
                             filename = f"{partnervalue}-{countryvalue}.xml"
                             urllib.request.urlretrieve(URL, filename)
-                            finalOp = xmlExtractor(None, filename, feed_extraction_collection_conn, client_source_master_collection_conn, employerId,
+                            finalOp = xmlExtractor(parent_working_directory, None, filename, feed_extraction_collection_conn, client_source_master_collection_conn, employerId,
                                                    client_conf_data["feed"], additional_fields_data,
                                                    client_companies_collection_conn, getProcessID)
                             print(finalOp)
@@ -134,7 +137,7 @@ def myjob():
                                 for chunk in r.iter_content(chunk_size=1200000):
                                     if chunk:  # filter out keep-alive new chunks
                                         f.write(chunk)
-                            finalOp = xmlExtractor(None, filename, feed_extraction_collection_conn, client_source_master_collection_conn, employerId,
+                            finalOp = xmlExtractor(parent_working_directory, None, filename, feed_extraction_collection_conn, client_source_master_collection_conn, employerId,
                                                    client_conf_data["feed"], additional_fields_data,
                                                    client_companies_collection_conn, getProcessID)
                             print(finalOp)

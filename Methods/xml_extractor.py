@@ -73,7 +73,7 @@ def getAttributeValues(allfields):
         map(lambda x: x["dataType"], allfields))
 
 
-def xmlExtractor(foldername, filename, extraction_collection_conn, csm_collection_conn, employerId, fieldmaps, additional_fields_data,
+def xmlExtractor(parent_directory, foldername, filename, extraction_collection_conn, csm_collection_conn, employerId, fieldmaps, additional_fields_data,
                  client_companies_collection_conn, processId):
     try:
         jobscounter = 0
@@ -206,8 +206,22 @@ def xmlExtractor(foldername, filename, extraction_collection_conn, csm_collectio
         if filename is not None:
             if os.path.exists(filename):
                 os.remove(filename)
+        os.chdir("../")
+        if parent_directory is not None:
+            if os.path.exists(parent_directory):
+                os.rmdir(parent_directory)
         return jobscounter
     except Exception as e:
+        if foldername is not None:
+            if os.path.exists(foldername):
+                os.remove(foldername)
+        if filename is not None:
+            if os.path.exists(filename):
+                os.remove(filename)
+        os.chdir("../")
+        if parent_directory is not None:
+            if os.path.exists(parent_directory):
+                os.rmdir(parent_directory)
         error = f"Error at :{xmlExtractor.__name__} - {e}"
         print(error)
         return error
