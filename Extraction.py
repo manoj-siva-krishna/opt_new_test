@@ -58,6 +58,7 @@ def myjob():
                     for URL in URLS:
                         additional_fields_data = {
                             "employerId": employerId,
+                            "clientName": client_conf_data["employerName"],
                             "source": URL,
                             "expStatus": 0,
                             "uniqueFields": client_conf_data["uniqueFields"][0],
@@ -65,6 +66,27 @@ def myjob():
                             "original_title": "",
                             "original_company": ""
                         }
+                        def removeJobs(input_collection_name):
+                            list_of_ids = list(map(lambda x: x["_id"], list(input_collection_name.find(
+                                {"employerId": employerId, "source": additional_fields_data["source"]}, {"_id": 1}))))
+
+                            def divide_chunks(l, n):
+                                # looping till length l
+                                for i in range(0, len(l), n):
+                                    yield l[i:i + n]
+
+                            # How many elements each
+                            # list should have
+                            n = 100000
+                            x = list(divide_chunks(list_of_ids, n))
+                            for eachchunk in x:
+                                start = time.time()
+                                input_collection_name.delete_many({'_id': {'$in': eachchunk}})
+                                print(time.time() - start)
+
+                        removeJobs(feed_extraction_collection_conn)
+                        removeJobs(client_source_master_collection_conn)
+
                         os.mkdir(employerId)
                         os.chdir(employerId)
                         parent_working_directory = employerId

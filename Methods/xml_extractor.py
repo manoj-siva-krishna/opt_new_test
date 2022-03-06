@@ -78,22 +78,22 @@ def xmlExtractor(parent_directory, foldername, filename, extraction_collection_c
     try:
         jobscounter = 0
         totaldata = []
-        def removeJobs(input_collection_name):
-            list_of_ids = list(map(lambda x: x["_id"], list(input_collection_name.find({"employerId": employerId,"source": additional_fields_data["source"]}, {"_id": 1}))))
-            def divide_chunks(l, n):
-                # looping till length l
-                for i in range(0, len(l), n):
-                    yield l[i:i + n]
-            # How many elements each
-            # list should have
-            n = 100000
-            x = list(divide_chunks(list_of_ids, n))
-            for eachchunk in x:
-                start = time.time()
-                input_collection_name.delete_many({'_id': {'$in': eachchunk}})
-                print(time.time() - start)
+        # def removeJobs(input_collection_name):
+        #     list_of_ids = list(map(lambda x: x["_id"], list(input_collection_name.find({"employerId": employerId,"source": additional_fields_data["source"]}, {"_id": 1}))))
+        #     def divide_chunks(l, n):
+        #         # looping till length l
+        #         for i in range(0, len(l), n):
+        #             yield l[i:i + n]
+        #     # How many elements each
+        #     # list should have
+        #     n = 100000
+        #     x = list(divide_chunks(list_of_ids, n))
+        #     for eachchunk in x:
+        #         start = time.time()
+        #         input_collection_name.delete_many({'_id': {'$in': eachchunk}})
+        #         print(time.time() - start)
         # removeJobs(extraction_collection_conn)
-        removeJobs(csm_collection_conn)
+        # removeJobs(csm_collection_conn)
 
         # extraction_collection_conn.bulk_write([pymongo.DeleteMany({"employerId": employerId,"source": additional_fields_data["source"]})])
         # csm_collection_conn.bulk_write([pymongo.DeleteMany({"employerId": employerId,"source": additional_fields_data["source"]})])
@@ -126,14 +126,29 @@ def xmlExtractor(parent_directory, foldername, filename, extraction_collection_c
                         print(error)
                         return error
 
+                # def getallelemdata(eachmember):
+                #     try:
+                #         # eachjobdata[fieldMaps[elem[eachmember].tag]] = elem[eachmember].text
+                #         if eachmember in xmltags:
+                #             eachjobdata[databaseFields[xmltags.index(eachmember)]] = getTypeBasedValue(
+                #                 elem[tagnamesXML.index(eachmember)].text, typechecks[xmltags.index(eachmember)])
+                #         else:
+                #             eachjobdata[eachmember] = elem[tagnamesXML.index(eachmember)].text
+                #     except:
+                #         eachjobdata[eachmember] = None
+                #         pass
+
                 def getallelemdata(eachmember):
                     try:
                         # eachjobdata[fieldMaps[elem[eachmember].tag]] = elem[eachmember].text
-                        if eachmember in xmltags:
+                        if eachmember in tagnamesXML:
                             eachjobdata[databaseFields[xmltags.index(eachmember)]] = getTypeBasedValue(
                                 elem[tagnamesXML.index(eachmember)].text, typechecks[xmltags.index(eachmember)])
                         else:
-                            eachjobdata[eachmember] = elem[tagnamesXML.index(eachmember)].text
+                            try:
+                                eachjobdata[eachmember] = elem[tagnamesXML.index(eachmember)].text
+                            except:
+                                eachjobdata[databaseFields[xmltags.index(eachmember)]] = None
                     except:
                         eachjobdata[eachmember] = None
                         pass
@@ -173,7 +188,7 @@ def xmlExtractor(parent_directory, foldername, filename, extraction_collection_c
                         print(error)
                         return error
 
-                list(map(getallelemdata, tagnamesXML))
+                list(map(getallelemdata, xmltags))
                 additional_fields_data_keys = additional_fields_data.keys()
                 list(map(getAdditionalFields, additional_fields_data_keys))
                 # def getMissingFields():
@@ -185,15 +200,16 @@ def xmlExtractor(parent_directory, foldername, filename, extraction_collection_c
                 # getMissingFields()
                 company = eachjobdata["company"]
                 companiesDict[company] = companiesDict.get(company, 0) + 1
+                eachjobdata["createdDt"] = datetime.datetime.now()
                 totaldata.append(eachjobdata)
                 elem.clear()
                 if len(totaldata) >= 25000:
-                    # extraction_collection_conn.insert_many(totaldata)
+                    extraction_collection_conn.insert_many(totaldata)
                     csm_collection_conn.insert_many(totaldata)
                     jobscounter += len(totaldata)
                     totaldata = []
         if len(totaldata) > 0:
-            # extraction_collection_conn.insert_many(totaldata)
+            extraction_collection_conn.insert_many(totaldata)
             csm_collection_conn.insert_many(totaldata)
             jobscounter += len(totaldata)
         CompaniesToInsert = list(map(lambda x: pymongo.UpdateOne({"company": x, "employerId": employerId}, {
