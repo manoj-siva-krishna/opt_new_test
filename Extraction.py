@@ -58,7 +58,7 @@ def myjob():
                     for URL in URLS:
                         additional_fields_data = {
                             "employerId": employerId,
-                            "clientName": client_conf_data["employerName"],
+                            "clientName": employerId.split("-")[-1] if "-" in employerId else employerId,
                             "source": URL,
                             "expStatus": 0,
                             "uniqueFields": client_conf_data["uniqueFields"][0],
@@ -184,6 +184,9 @@ def myjob():
             myjob()
     except Exception as e:
         print(e)
+        time.sleep(600)
+        myjob()
+
 
 # schedule.every().day.at("00:00").do(myjob)
 schedule.every(5).seconds.do(myjob)
