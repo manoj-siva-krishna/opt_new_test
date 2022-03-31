@@ -176,7 +176,7 @@ def xmlExtractor(parent_directory, foldername, filename, extraction_collection_c
                                             if (countryChecker == "unitedstates" or countryChecker == "united states" or countryChecker == "usa" or countryChecker == "us" or countryChecker == "united states of america"):
                                                 eachjobdata[eachuniqueField] = "US"
                                         uniqueKeyString = ""
-                                        cleansedField = re.sub('[^A-Za-z0-9]+', ' ',
+                                        cleansedField = re.sub('[^A-Za-z0-9 ]+', '',
                                                                eachjobdata[eachuniqueField].lower().strip())
                                         cleansedField = re.sub(' {2,}', ' ', cleansedField).strip()
                                         splitlist = cleansedField.split(" ")
