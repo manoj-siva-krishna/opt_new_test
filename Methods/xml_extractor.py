@@ -105,7 +105,7 @@ def xmlExtractor(parent_directory, foldername, filename, extraction_collection_c
                 eachjobdata = {}
                 rangeofmembers = range(0, len(elem))
                 tagnamesXML = [elem[x].tag for x in rangeofmembers]
-
+                tagnamesChildren = [elem[x][0].tag if len(elem[x]) > 0 else None for x in rangeofmembers]
                 def getTypeBasedValue(value, typecheck):
                     try:
                         if is_valid_data(value):
@@ -142,11 +142,18 @@ def xmlExtractor(parent_directory, foldername, filename, extraction_collection_c
                     try:
                         # eachjobdata[fieldMaps[elem[eachmember].tag]] = elem[eachmember].text
                         if eachmember in tagnamesXML:
-                            eachjobdata[databaseFields[xmltags.index(eachmember)]] = getTypeBasedValue(
-                                elem[tagnamesXML.index(eachmember)].text, typechecks[xmltags.index(eachmember)])
+                            if tagnamesChildren[tagnamesXML.index(eachmember)] is None:
+                                eachjobdata[databaseFields[xmltags.index(eachmember)]] = getTypeBasedValue(
+                                    elem[tagnamesXML.index(eachmember)].text, typechecks[xmltags.index(eachmember)])
+                            else:
+                                eachjobdata[databaseFields[xmltags.index(eachmember)]] = getTypeBasedValue(
+                                    elem[tagnamesXML.index(eachmember)][0].text, typechecks[xmltags.index(eachmember)])
                         else:
                             try:
-                                eachjobdata[eachmember] = elem[tagnamesXML.index(eachmember)].text
+                                if tagnamesChildren[tagnamesXML.index(eachmember)] is None:
+                                    eachjobdata[eachmember] = elem[tagnamesXML.index(eachmember)].text
+                                else:
+                                    eachjobdata[eachmember] = elem[tagnamesXML.index(eachmember)][0].text
                             except:
                                 eachjobdata[databaseFields[xmltags.index(eachmember)]] = None
                     except:
@@ -187,7 +194,6 @@ def xmlExtractor(parent_directory, foldername, filename, extraction_collection_c
                         error = f"Error at :{getAdditionalFields.__name__} - {e}"
                         print(error)
                         return error
-
                 list(map(getallelemdata, xmltags))
                 additional_fields_data_keys = additional_fields_data.keys()
                 list(map(getAdditionalFields, additional_fields_data_keys))

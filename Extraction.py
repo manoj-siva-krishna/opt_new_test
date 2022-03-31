@@ -44,6 +44,8 @@ def myjob():
                     print("In If condition")
                     URLS_data = client_conf_data["sourceUrl"]
                     URLS = list(map(lambda x: x["url"], URLS_data))
+                    usernames = list(map(lambda x:x["username"] if "username" in x else None, URLS_data))
+                    passwords = list(map(lambda x:x["password"] if "password" in x else None, URLS_data))
                     # fieldMaps = client_conf_data["fieldmap"]
                     # replaceFields = client_conf_data["replaceFields"]
                     # extraFields = client_conf_data["extraFields"]
@@ -90,7 +92,38 @@ def myjob():
                         os.mkdir(employerId)
                         os.chdir(employerId)
                         parent_working_directory = employerId
-                        if URL.endswith(".zip"):
+                        if usernames[URLS.index(URL)] is not None and passwords[URLS.index(URL)] is not None:
+                            print(usernames[URLS.index(URL)])
+                            print(passwords[URLS.index(URL)])
+                            response = requests.get(URL, auth=(usernames[URLS.index(URL)], passwords[URLS.index(URL)]))
+                            filename = employerId + ".xml"
+                            with open(filename, 'wb') as file:
+                                file.write(response.content)
+                            finalOp = xmlExtractor(parent_working_directory, None, filename,
+                                                   feed_extraction_collection_conn, client_source_master_collection_conn,
+                                                   employerId,
+                                                   client_conf_data["feed"], additional_fields_data,
+                                                   client_companies_collection_conn, getProcessID)
+                            print(finalOp)
+                        elif "jobadx" in employerId:
+                            folder_name = 'feed.xml.gz'
+                            response = requests.get(URL, stream=True)
+                            if response.status_code == 200:
+                                with open(folder_name, 'wb') as f:
+                                    f.write(response.raw.read())
+                            print("Downloading data now")
+                            os.system("gunzip " + folder_name)
+                            print("Completed Gunzipping data now")
+                            filename = folder_name.split(".gz")[0]
+                            print(filename)
+                            finalOp = xmlExtractor(parent_working_directory, folder_name, filename,
+                                                   feed_extraction_collection_conn,
+                                                   client_source_master_collection_conn,
+                                                   employerId,
+                                                   client_conf_data["feed"], additional_fields_data,
+                                                   client_companies_collection_conn, getProcessID)
+                            print(finalOp)
+                        elif URL.endswith(".zip"):
                             os.system(f"wget -c --read-timeout=5 --tries=0 {URL}")
 
                             from zipfile import ZipFile
