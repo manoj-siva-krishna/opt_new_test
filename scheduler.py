@@ -73,10 +73,10 @@ def myjob():
         time.sleep(300)
         myjob()
 
-# schedule.every().day.at("00:30").do(myjob)
-# schedule.every().day.at("08:30").do(myjob)
+schedule.every().day.at("00:30").do(myjob)
+schedule.every().day.at("08:30").do(myjob)
 #schedule.every().day.at("16:30").do(myjob)
-schedule.every(10).seconds.do(myjob)
+# schedule.every(10).seconds.do(myjob)
 
 while 1:
     schedule.run_pending()
