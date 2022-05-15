@@ -6,6 +6,8 @@ from Methods.helper import *
 import dateutil.parser as parser
 import pymongo
 import time
+from functools import reduce
+import operator
 
 usStatesAbbr = {
     'Alabama': 'AL',
@@ -103,9 +105,30 @@ def xmlExtractor(parent_directory, foldername, filename, extraction_collection_c
         for event, elem in ET.iterparse(filename, events=("start", "end")):
             if elem.tag == fieldmaps["root"] and event == "end":
                 eachjobdata = {}
-                rangeofmembers = range(0, len(elem))
-                tagnamesXML = [elem[x].tag for x in rangeofmembers]
-                tagnamesChildren = [elem[x][0].tag if len(elem[x]) > 0 else None for x in rangeofmembers]
+                # rangeofmembers = range(0, len(elem))
+
+                def recursive_dict(element):
+                    return element.tag, dict(map(recursive_dict, element)) or element.text
+
+                data_dict = recursive_dict(elem)
+
+                def get_paths(d, current=[]):
+                    print(type(d))
+                    for a, b in d.items():
+                        yield current + [a]
+                        if isinstance(b, dict):
+                            yield from get_paths(b, current + [a])
+                        elif isinstance(b, list):
+                            for i in b:
+                                yield from get_paths(i, current + [a])
+
+                final_result = list(get_paths(data_dict[1]))
+                new_result = [a for i, a in enumerate(final_result) if a not in final_result[:i]]
+                # print(new_result)
+                tagnamesXML = list(map(lambda x: ".".join(x), new_result))
+                # print(tagnamesXML)
+                # tagnamesXML = [elem[x].tag for x in rangeofmembers]
+                # tagnamesChildren = [elem[x][0].tag if len(elem[x]) > 0 else None for x in rangeofmembers]
                 def getTypeBasedValue(value, typecheck):
                     try:
                         if is_valid_data(value):
@@ -138,22 +161,44 @@ def xmlExtractor(parent_directory, foldername, filename, extraction_collection_c
                 #         eachjobdata[eachmember] = None
                 #         pass
 
+                # def getallelemdata(eachmember):
+                #     try:
+                #         # eachjobdata[fieldMaps[elem[eachmember].tag]] = elem[eachmember].text
+                #         if eachmember in tagnamesXML:
+                #             if tagnamesChildren[tagnamesXML.index(eachmember)] is None:
+                #                 eachjobdata[databaseFields[xmltags.index(eachmember)]] = getTypeBasedValue(
+                #                     elem[tagnamesXML.index(eachmember)].text, typechecks[xmltags.index(eachmember)])
+                #             else:
+                #                 eachjobdata[databaseFields[xmltags.index(eachmember)]] = getTypeBasedValue(
+                #                     elem[tagnamesXML.index(eachmember)][0].text, typechecks[xmltags.index(eachmember)])
+                #         else:
+                #             try:
+                #                 if tagnamesChildren[tagnamesXML.index(eachmember)] is None:
+                #                     eachjobdata[eachmember] = elem[tagnamesXML.index(eachmember)].text
+                #                 else:
+                #                     eachjobdata[eachmember] = elem[tagnamesXML.index(eachmember)][0].text
+                #             except:
+                #                 eachjobdata[databaseFields[xmltags.index(eachmember)]] = None
+                #     except:
+                #         eachjobdata[eachmember] = None
+                #         pass
+
                 def getallelemdata(eachmember):
                     try:
-                        # eachjobdata[fieldMaps[elem[eachmember].tag]] = elem[eachmember].text
-                        if eachmember in tagnamesXML:
-                            if tagnamesChildren[tagnamesXML.index(eachmember)] is None:
-                                eachjobdata[databaseFields[xmltags.index(eachmember)]] = getTypeBasedValue(
-                                    elem[tagnamesXML.index(eachmember)].text, typechecks[xmltags.index(eachmember)])
+                        def getFromDict(dataDict, mapString):
+                            if "." in mapString:
+                                oldmapList = mapString.split(".")
+                                mapList = [int(x) if x.isdigit() else x for x in oldmapList]
                             else:
-                                eachjobdata[databaseFields[xmltags.index(eachmember)]] = getTypeBasedValue(
-                                    elem[tagnamesXML.index(eachmember)][0].text, typechecks[xmltags.index(eachmember)])
+                                mapList = [mapString]
+                            return reduce(operator.getitem, mapList, dataDict)
+
+                        if eachmember in tagnamesXML:
+                            eachjobdata[databaseFields[xmltags.index(eachmember)]] = getTypeBasedValue(
+                            getFromDict(data_dict[1], eachmember), typechecks[xmltags.index(eachmember)])
                         else:
                             try:
-                                if tagnamesChildren[tagnamesXML.index(eachmember)] is None:
-                                    eachjobdata[eachmember] = elem[tagnamesXML.index(eachmember)].text
-                                else:
-                                    eachjobdata[eachmember] = elem[tagnamesXML.index(eachmember)][0].text
+                                eachjobdata[databaseFields[xmltags.index(eachmember)]] = getFromDict(data_dict[1], eachmember)
                             except:
                                 eachjobdata[databaseFields[xmltags.index(eachmember)]] = None
                     except:
